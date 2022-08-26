@@ -24,6 +24,7 @@ class imageRGB{
 	private $resized;
 	private $fivePercentage;
 	private $resize;
+	private $pick;
 
 	/*A constructor that initializes all the data from the received file */
 	/*Saves the image under a new name in a folder in the project */
@@ -36,7 +37,7 @@ class imageRGB{
 			$this->fileSize = $_FILES['file']['size'];
 			$this->fileError = $_FILES['file']['error'];
 			$this->fileType = $_FILES['file']['type'];
-
+			$this->pick = $_POST['pick'];
 
 
 			$this->fileExt = explode('.', $this->fileName);
@@ -52,7 +53,7 @@ class imageRGB{
 						$this->fileDestination = "upload/" . $this->newFileName;
 						move_uploaded_file($this->fileTmpName, $this->fileDestination);
 						$this->location = "upload/$this->newFileName";
-						echo $this->calc();
+						echo $this->classificationByPixels();
 					} else {
 						echo '<script>alert("Your file is too big!")</script>';
 						echo $this->backIndex();
@@ -83,7 +84,7 @@ class imageRGB{
 	}
 	/*Measures how much of each value of red green blue alpha there is
 by going over each pixel in the image*/
-	public function calc()
+	public function classificationByPixels()
 	{
 
 		list($this->width, $this->height) = getimagesize($this->location);
@@ -141,16 +142,15 @@ by going over each pixel in the image*/
 				$this->intArray[] = $this->pixelColorArray[$i][$j]['red'];
 				$this->intArray[] = $this->pixelColorArray[$i][$j]['green'];
 				$this->intArray[] = $this->pixelColorArray[$i][$j]['blue'];
-				//$this->intArray[] = $this->pixelColorArray[$i][$j]['alpha'];
 				$this->arrayArray[] = $this->intArray;
 				$this->intArray = (array)null;
 			}
 		}
-		echo $this->calc2();
+		echo $this->savesColorTypeByIndex();
 	}
 
 	/*Saves color types from index to index*/
-	public function calc2()
+	public function savesColorTypeByIndex()
 	{
 		$index = 0;
 		$this->Rangecounter = array(0);
@@ -186,7 +186,7 @@ by going over each pixel in the image*/
 		for ($i = 0; $i < sizeof($this->counter); $i++) {
 			$this->sumOfType += $this->counter[$i];
 		}
-		echo $this->find_5_Max_Index();
+		echo $this->findMaxIndex();
 	}
 
 
@@ -218,16 +218,17 @@ by going over each pixel in the image*/
 		return $temp;
 	}
 	/*Looking for the values of the 5 biggest shows*/
-	public function find_5_Max_Index()
+	public function findMaxIndex()
 	{
-		if (sizeof($this->counter) >= 5) {
+
+		if (sizeof($this->counter) >= $this->pick) {
 			$this->tempArray = array();
 			$this->fivePopularRgb = array();
 			$temp = $this->returIndexWithMaxCount();
 			$this->tempArray[] = $temp;
 			$this->fivePopularRgb[] = $this->arrayArray[$this->Rangecounter[$temp]];
 
-			while (sizeof($this->tempArray) != 5) {
+			while (sizeof($this->tempArray) != $this->pick) {
 				$x = $this->returnIndexLikeindexWithMaxCount($temp);
 				$this->tempArray[] = $x;
 				$this->fivePopularRgb[] = $this->arrayArray[$this->Rangecounter[$x]];
@@ -235,7 +236,7 @@ by going over each pixel in the image*/
 			}
 			echo $this->calcPercentage();
 		} else {
-			echo '<script>alert("ERROR!")</script>';
+			echo '<script>alert("ERROR! ,' . $this->pick . ' different colors were not found")</script>';
 			echo $this->backIndex();
 		}
 	}
@@ -249,11 +250,9 @@ by going over each pixel in the image*/
 	public function calcPercentage()
 	{
 		$this->fivePercentage = array();
-		$this->fivePercentage[] = ($this->counter[$this->tempArray[0]] * 100) / $this->sumOfType;
-		$this->fivePercentage[] = ($this->counter[$this->tempArray[1]] * 100) / $this->sumOfType;
-		$this->fivePercentage[] = ($this->counter[$this->tempArray[2]] * 100) / $this->sumOfType;
-		$this->fivePercentage[] = ($this->counter[$this->tempArray[3]] * 100) / $this->sumOfType;
-		$this->fivePercentage[] = ($this->counter[$this->tempArray[4]] * 100) / $this->sumOfType;
+		for ($i = 0; $i < sizeof($this->tempArray); $i++) {
+			$this->fivePercentage[] = ($this->counter[$this->tempArray[$i]] * 100) / $this->sumOfType;
+		}
 	}
 
 	/*get percent of most popular color*/
